@@ -1,0 +1,359 @@
+﻿name: Create Draft Release
+env:
+  VERSION_PREFIX: "v"
+  RELEASE_BRANCH: "release"
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "Release mode (affects exactly how the operation is performed)"
+        type: choice
+        options:
+          - "Package"
+          - "Merge"
+        required: true
+      version:
+        description: "Release version in full format (example: v1.1.5)"
+        type: string
+        required: true
+
+jobs:
+  shipping:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: "Validation: secrets"
+        run: |
+          echo "Checking secrets..."
+          if [ -z '${{ secrets.BOT_NAME }}' ]; then echo "::error::BOT_NAME secret is empty"; exit 1; fi
+          if [ -z '${{ secrets.BOT_EMAIL }}' ]; then echo "::error::BOT_EMAIL secret is empty"; exit 1; fi
+          if [ -z '${{ secrets.BOT_TOKEN }}' ]; then echo "::error::BOT_TOKEN secret is empty"; exit 1; fi
+          
+          echo "::notice::Validation: all secrets is valid"
+
+      - name: "Validation: package variables"
+        if: ${{ github.event.inputs.mode == 'Package' }}
+        run: |
+          echo "Checking variables..."
+          
+          if [ -z '${{ vars.PACKAGE_FOLDER }}' ]; then echo "::error::PACKAGE_FOLDER variable is empty"; exit 1; fi
+          
+          echo "::notice::Validation: all variables is valid"
+
+      - name: "Job checkout"
+        uses: actions/checkout@v6
+        with:
+          token: ${{ secrets.BOT_TOKEN }}
+          fetch-depth: 0
+
+      - name: "Validation: version"
+        env:
+          GH_TOKEN: ${{ secrets.BOT_TOKEN }}
+        run: |
+          VERSION="${{ github.event.inputs.version }}"
+          
+          echo "Checking version: $VERSION..."
+          git fetch --tags --force
+          
+          if [ -z "$VERSION" ] || [ "$VERSION" = '${{ env.VERSION_PREFIX }}' ]; then
+            echo "::error::Version is empty or contains only prefix"
+            exit 1
+          fi
+          
+          if [[ ! "$VERSION" =~ ^v[0-9]+(\.[0-9]+)*$ ]]; then
+            echo "::error::Invalid version '$VERSION' format, allowed format is only numbers and dots after '${{ env.VERSION_PREFIX }}' prefix"
+            exit 1
+          fi
+          
+          if git rev-parse "$VERSION" >/dev/null 2>&1; then
+            echo "::error::Git tag '$VERSION' already exists in the repository"
+            exit 1
+          fi
+          
+          DRAFT_COUNT=$(gh release list --limit 100 --json isDraft,tagName -q '[.[] | select(.isDraft == true)] | length')
+          if [ "$DRAFT_COUNT" -gt 0 ]; then
+            echo "::error::Already have $DRAFT_COUNT draft release(s), resolve them first"
+            exit 1
+          fi
+          
+          echo "::notice::Validation: version '$VERSION' is valid"
+
+      - name: "Validation: repositories and branches"
+        env:
+          REPO_URL: "github.com/${{ github.repository }}.git"
+        run: |
+          REPO_URL="https://x-access-token:${{ secrets.BOT_TOKEN }}@${{ env.REPO_URL }}"
+          
+          echo "Checking access to the repository..."
+          if git ls-remote --heads "$REPO_URL" > /dev/null; then
+            echo "::notice::Validation: access to the repository is confirmed"
+          else
+            echo "::error::Validation: repository not found or Bot's Token not accessible"
+            exit 1
+          fi
+
+      - name: "Validation: mergeable history"
+        if: ${{ github.event.inputs.mode == 'Merge' }}
+        run: |
+          echo "Checking history for Mode: '${{ github.event.inputs.mode }}'..."
+          
+          if git rev-parse --verify origin/${{ env.RELEASE_BRANCH }} >/dev/null 2>&1; then
+            echo "::notice::Validation: branch '$RELEASE_BRANCH' found"
+          else
+            echo "::notice::Validation: branch '$RELEASE_BRANCH' not yet created. Some checks will be skipped"
+            exit 0
+          fi
+          
+          MERGE_BASE=$(git merge-base origin/${{ github.ref_name }} origin/${{ env.RELEASE_BRANCH }} 2>/dev/null || echo "")
+          if [ -z "$MERGE_BASE" ]; then
+            echo "::error::Validation: branches '${{ github.ref_name }}' and '${{ env.RELEASE_BRANCH }}' have no shared history"
+            exit 1
+          else
+            echo "::notice::Validation: branches '${{ github.ref_name }}' and '${{ env.RELEASE_BRANCH }}' have shared history at commit '$MERGE_BASE'"
+          fi
+
+      - name: "Validation: orphan history"
+        if: ${{ github.event.inputs.mode == 'Package' }}
+        run: |
+          echo "Checking history for Mode: '${{ github.event.inputs.mode }}'..."
+          
+          if git rev-parse --verify origin/${{ env.RELEASE_BRANCH }} >/dev/null 2>&1; then
+            echo "::notice::Validation: branch '${{ env.RELEASE_BRANCH }}' found"
+          else
+            echo "::notice::Validation: branch '${{ env.RELEASE_BRANCH }}' not yet created. Some checks will be skipped"
+            exit 0
+          fi
+          
+          DEFAULT_BRANCH="${{ github.event.repository.default_branch }}"
+          MERGE_BASE=$(git merge-base origin/$DEFAULT_BRANCH origin/${{ env.RELEASE_BRANCH }} 2>/dev/null || echo "")
+          if [ -n "$MERGE_BASE" ]; then
+            echo "::error::Validation: branch '${{ env.RELEASE_BRANCH }}' is NOT an orphan branch. Shared commit: $MERGE_BASE"
+            exit 1
+          else
+            echo "::notice::Validation: '${{ env.RELEASE_BRANCH }}' is a clean orphan branch"
+          fi
+
+      - name: "Configuration Bot from secrets"
+        run: |
+          git config --global user.name '${{ secrets.BOT_NAME }}'
+          git config --global user.email '${{ secrets.BOT_EMAIL }}'
+
+      - name: "Temporary directory: package cloning"
+        if: ${{ github.event.inputs.mode == 'Package' }}
+        run: |
+          TARGET_PATH=$(find . -type d \( -name "${{ vars.PACKAGE_FOLDER }}" -o -not -path '*/.*' \) -name "${{ vars.PACKAGE_FOLDER }}" | head -n 1)
+          
+          if [ -z "$TARGET_PATH" ]; then
+            echo "::error::Package folder '${{ vars.PACKAGE_FOLDER }}' not found in files"
+            exit 1;
+          fi
+          
+          TEMP_DIRECTORY=$(mktemp -d)
+          cp -ra "$TARGET_PATH" "$TEMP_DIRECTORY/"
+          
+          echo "TEMP_DIRECTORY=$TEMP_DIRECTORY" >> $GITHUB_ENV
+          echo "::notice::Temporary directory was cloned from package '$TARGET_PATH'"
+
+      - name: "Temporary directory: sync package files"
+        if: ${{ github.event.inputs.mode == 'Package' }}
+        run: |
+          # The file names must have no extensions
+          TARGET_FILES=("LICENSE" "README")
+          TEMPORARY_ROOT="${{ env.TEMP_DIRECTORY }}/${{ vars.PACKAGE_FOLDER }}"
+          
+          echo "::notice::Syncing package files into temporary package directory..."
+
+          for TARGET_FILE in "${TARGET_FILES[@]}"; do
+            TARGET_FULL_PATH=$(find "$TEMPORARY_ROOT" -maxdepth 1 -iname "${TARGET_FILE%%.*}*" -type f -print -quit)  
+
+            if [ -f "$TARGET_FULL_PATH" ]; then
+              FILENAME=$(basename "$TARGET_FULL_PATH")
+              echo "File '$FILENAME' found in package folder"
+
+              SOURCE_PATH=$(find . -maxdepth 1 -iname "${FILENAME%%.*}*" -type f -print -quit)
+              if [ -n "$SOURCE_PATH" ] && [ -f "$SOURCE_PATH" ]; then
+                cp -f "$SOURCE_PATH" "$TARGET_FULL_PATH"
+                echo "::notice::Synced '$TARGET_FILE' from source '$SOURCE_PATH'"
+              else
+                echo "::error::File '$TARGET_FILE' sync failed, no matching files found in root"
+                exit 1
+              fi
+            else
+              echo "File '$TARGET_FILE' is not present in package, skipping"
+            fi
+          done
+
+          echo "::notice::Syncing package files successfully completed"
+
+      - name: "'${{ env.RELEASE_BRANCH }}' branch: locally checkout"
+        run: |
+          if git rev-parse --verify origin/"${{ env.RELEASE_BRANCH }}" >/dev/null 2>&1; then
+            echo "::notice::Branch '${{ env.RELEASE_BRANCH }}' exists. Checking out..."
+            git checkout -B "${{ env.RELEASE_BRANCH }}" origin/"${{ env.RELEASE_BRANCH }}"
+            exit 0
+          fi
+          
+          echo "::notice::Branch '${{ env.RELEASE_BRANCH }}' does not exist"
+          
+          if [ "${{ github.event.inputs.mode }}" == "Package" ]; then
+            echo "::notice::Creating orphan '${{ env.RELEASE_BRANCH }}' branch"
+            git checkout --orphan "${{ env.RELEASE_BRANCH }}"
+          elif [ "${{ github.event.inputs.mode }}" == "Merge" ]; then
+            echo "::notice::Creating '${{ env.RELEASE_BRANCH }}' branch from '${{ github.ref }}'"
+            git checkout -b "${{ env.RELEASE_BRANCH }}"
+          else
+            echo "::error::Unknown mode '${{ github.event.inputs.mode }}'. Cannot determine how to create '${{ env.RELEASE_BRANCH }}' branch"
+            exit 1
+          fi
+          
+          echo "::notice::Branch '${{ env.RELEASE_BRANCH }}' is ready locally"
+
+      - name: "'${{ env.RELEASE_BRANCH }}' branch: staging merge from ${{ github.ref_name }}"
+        if: ${{ github.event.inputs.mode == 'Merge' }}
+        run: |
+          echo "::notice::Attempting to merge '${{ github.ref_name }}' branch into '${{ env.RELEASE_BRANCH }}' branch..."
+          
+          if ! git ls-remote --heads origin "${{ env.RELEASE_BRANCH }}" | grep -q "${{ env.RELEASE_BRANCH }}"; then
+            echo "::notice::Branch '${{ env.RELEASE_BRANCH }}' was just created on local, merge is not necessary"
+            exit 0
+          fi
+          
+          if ! git merge "origin/${{ github.ref_name }}" --no-commit --no-ff; then
+            echo "::error::A merge conflict may have occurred! Please resolve this before next attempt"
+            git merge --abort
+            exit 1
+          fi
+          
+          if git diff --staged --quiet; then
+            echo "::error::No changes detected after merge. The '${{ env.RELEASE_BRANCH }}' branch is already up-to-date with '${{ github.ref_name }}'"
+            exit 1
+          fi
+          
+          echo "::notice::Changes from '${{ github.ref_name }}' are now staged in '${{ env.RELEASE_BRANCH }}'"
+
+      - name: "'${{ env.RELEASE_BRANCH }}' branch: staging temporary package"
+        if: ${{ github.event.inputs.mode == 'Package' }}
+        run: |
+          echo "::notice::Attempting to stage temporary files into '${{ env.RELEASE_BRANCH }}'..."
+          
+          git rm -rf . --ignore-unmatch
+          cp -ra "${{ env.TEMP_DIRECTORY }}/${{ vars.PACKAGE_FOLDER }}/." .
+          
+          git add .
+          if git diff --staged --quiet; then
+            echo "::error::No changes detected. Release cannot be processed"
+            exit 1
+          fi
+          
+          echo "::notice::Temporary files are now staged in '${{ env.RELEASE_BRANCH }}'"
+
+      - name: "'${{ env.RELEASE_BRANCH }}' branch: update ${{ env.PACKAGE_JSON }}"
+        if: ${{ github.event.inputs.mode == 'Package' }}
+        env:
+          PACKAGE_JSON: "package.json"
+          RELEASE_URL: "${{ github.server_url }}/${{ github.repository }}/releases/tag/${{ github.event.inputs.version }}"
+        run: |
+          PACKAGE_PATH="./${{ env.PACKAGE_JSON }}"
+          
+          if [ ! -f "$PACKAGE_PATH" ]; then
+            echo "::error::File '${{ env.PACKAGE_JSON }}' not found in files"
+            exit 1
+          fi
+          
+          VERSION="${{ github.event.inputs.version }}"
+          SHORT_VERSION="${VERSION#${{ env.VERSION_PREFIX }}}"
+          if ! jq --arg v "$SHORT_VERSION" \
+            --arg u "${{ env.RELEASE_URL }}" \
+            '.version = $v | .changelogUrl = $u' \
+            "$PACKAGE_PATH" > "${PACKAGE_PATH}.tmp"; then
+              echo "::error::Failed to process '${{ env.PACKAGE_JSON }}' with jq"
+              exit 1
+          fi
+          
+          mv "${PACKAGE_PATH}.tmp" "$PACKAGE_PATH"
+          git add "$PACKAGE_PATH"
+          
+          echo "::notice::Successfully updated and re-staged '${{ env.PACKAGE_JSON }}'"
+
+      - name: "'${{ env.RELEASE_BRANCH }}' branch: preparing NPM package"
+        if: ${{ github.event.inputs.mode == 'Package' }}
+        run: |
+          echo "Creating NPM package..."
+          
+          CLEAN_REPO_NAME=$(echo "${{ github.event.repository.name }}" | tr -d '-')
+          VERSION="${{ github.event.inputs.version }}"
+          SHORT_VERSION="${VERSION#${{ env.VERSION_PREFIX }}}"
+          TAR_FILENAME="${CLEAN_REPO_NAME}-${SHORT_VERSION}-npm.tgz"
+          TEMP_PATH="/tmp/$TAR_FILENAME"
+          
+          echo "NPM package will be created at '$TEMP_PATH'"
+          
+          TEMP_PACKAGE_DIR=$(mktemp -d)
+          mkdir -p "$TEMP_PACKAGE_DIR/package"
+          cp -ra . "$TEMP_PACKAGE_DIR/package/"
+          
+          if ! tar -czf "$TEMP_PATH" --exclude-vcs -C "$TEMP_PACKAGE_DIR" package; then
+            echo "::error::Operation 'tar' was failed"
+            exit 1
+          fi
+          
+          if [ -f "$TEMP_PATH" ]; then
+            echo "NPM package structure:"
+            tar -tf "$TEMP_PATH" | head -n 5
+          else
+            echo "::error::Failed to create the NPM package"
+            exit 1
+          fi
+          
+          echo "NPM_PACKAGE_PATH=$TEMP_PATH" >> $GITHUB_ENV
+          echo "::notice::NPM package '$TEMP_PATH' created successfully"
+
+      - name: "'${{ env.RELEASE_BRANCH }}' branch: commit and push"
+        run: |
+          git add .
+
+          if git ls-remote --heads origin "${{ env.RELEASE_BRANCH }}" | grep -q "${{ env.RELEASE_BRANCH }}"; then
+            if git diff --staged --quiet; then
+              echo "::error::No changes to commit. Release cannot be processed"
+              exit 1
+            fi
+          fi
+          
+          git status
+          echo "::notice::Committing changes to '${{ env.RELEASE_BRANCH }}'..."
+          git commit -m "release: ${{ github.event.inputs.version }}" --allow-empty
+          git tag -f "${{ github.event.inputs.version }}"
+          
+          echo "::notice::Pushing changes to '${{ env.RELEASE_BRANCH }}'..."
+          git push origin "${{ env.RELEASE_BRANCH }}" --force
+          git push origin "${{ github.event.inputs.version }}" --force
+          
+          echo "::notice::Branch '${{ env.RELEASE_BRANCH }}' was finally prepared for release"
+
+      - name: Create Release
+        id: release
+        uses: softprops/action-gh-release@v2.5.0
+        timeout-minutes: 5
+        with:
+          token: ${{ secrets.BOT_TOKEN }}
+          name: ${{ github.event.inputs.version }}
+          generate_release_notes: true
+          tag_name: ${{ github.event.inputs.version }}
+          target_commitish: ${{ env.RELEASE_BRANCH }}
+          draft: true
+          make_latest: true
+          files: |
+            ${{ env.NPM_PACKAGE_PATH }}
+          fail_on_unmatched_files: false
+
+      - name: "Summary: display release info"
+        run: |
+          echo "::notice::Release successfully drafted"
+          
+          echo "### Release Process Completed" >> $GITHUB_STEP_SUMMARY
+          echo "**Version:** ${{ github.event.inputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Mode:** ${{ github.event.inputs.mode }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "#### [Click here to review Draft Release](${{ steps.release.outputs.url }})" >> $GITHUB_STEP_SUMMARY

@@ -1,0 +1,27 @@
+name: Chore
+description: A simple way to document your routine.
+projects: []
+type: Chore
+body:
+  - type: textarea
+    id: description-textarea
+    attributes:
+      label: Description
+      description: Causes of the task, context, history or general information
+      placeholder: "Example: Current Dodge icons are outdated and do not match the actual UI state."
+  - type: textarea
+    id: actions-textarea
+    attributes:
+      label: Actions
+      description: A clear list of specific actions that needs to be done
+      placeholder: "Example:\n- Locate all Dodge icons used in the application\n- Replace old icons with the new design assets\n- Run UI regression tests"
+    validations:
+      required: true
+  - type: textarea
+    id: references-textarea
+    attributes:
+      label: References
+      description: Links to examples or documentation
+      placeholder: "Example: Figma design."
+    validations:
+      required: false

@@ -1,0 +1,76 @@
+name: Bug Report
+type: Fix
+description: Found a bug? Let us know what went wrong
+body:
+  - type: input
+    id: version-input
+    attributes:
+      label: Version
+      description: Enter version where bug was noticed
+      placeholder: "Example: v1.0.0"
+    validations:
+      required: true
+  - type: textarea
+    id: preconditions-textarea
+    attributes:
+      label: Preconditions
+      description: What needs to be done BEFORE reproducing the bug
+      placeholder: "Example: \n- Player has character level 10\n- Stamina bar is visible\n- Controller is connected"
+    validations:
+      required: false
+  - type: textarea
+    id: steps-textarea
+    attributes:
+      label: Steps to Reproduce
+      description: Describe list of actions that should be performed by user to
+        reproduce bug.
+      placeholder: "Example: \n- Launch the game\n- Load save file \"Combat_Test_02\"\n- Enter combat with any enemy\n- Deplete stamina to 0\n- Press Dodge button (Space)"
+    validations:
+      required: true
+  - type: textarea
+    id: expected-textarea
+    attributes:
+      label: Expected Result
+      description: Describe how this expected to work
+      placeholder: "Example: Player performs dodge animation after stamina regeneration starts."
+    validations:
+      required: true
+  - type: textarea
+    id: actual-textarea
+    attributes:
+      label: Actual Result
+      description: Describe what actually happens
+      placeholder: "Example: Player cannot dodge even after stamina is fully restored."
+    validations:
+      required: true
+  - type: dropdown
+    id: rate-dropdown
+    attributes:
+      label: Reproduction Rate
+      description: "How often bug appears?"
+      options:
+        - Always
+        - Often
+        - Every other time
+        - Random
+        - Once
+    validations:
+      required: true
+  - type: textarea
+    id: workaround-textarea
+    attributes:
+      label: Workaround
+      description: Provide known way to overcome this bug
+      placeholder: "Example: Press Crawl button (Ctrl) before Dodge button (Space)"
+  - type: textarea
+    id: attachments-textarea
+    attributes:
+      label: Attachments
+      description: Provide any additional materials
+      placeholder: "Example: \n- Screenshots\n- Screen recording (at 1:24:04)"
+  - type: textarea
+    id: notes-textarea
+    attributes:
+      label: Additional Notes
+      description: Provide any additional descriptions or comments
+      placeholder: "Example: \n- Platform: PC\n- OS: Linux"

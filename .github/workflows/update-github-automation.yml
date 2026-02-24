@@ -1,0 +1,185 @@
+name: "Update GitHub Automation"
+env:
+  SOURCE_BRANCH: "release"
+  AUTOMATION_REPO_URL: "github.com/${{ vars.AUTOMATION_ORG }}/${{ vars.AUTOMATION_REPO }}.git"
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        type: string
+        description: "Target branch name to be created, must be related to issue (example: 'chore/1590-update-github-automation')"
+        required: true
+      commit-message:
+        type: string
+        description: "Git commit message for the subtree operation"
+        required: true
+      force-override:
+        type: boolean
+        description: "Override existing subtree and force add command"
+        default: false
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: "Validation: secrets"
+        run: |
+          echo "Checking secrets..."
+          if [ -z '${{ secrets.BOT_NAME }}' ]; then echo "::error::BOT_NAME secret is empty"; exit 1; fi
+          if [ -z '${{ secrets.BOT_EMAIL }}' ]; then echo "::error::BOT_EMAIL secret is empty"; exit 1; fi
+          if [ -z '${{ secrets.BOT_TOKEN }}' ]; then echo "::error::BOT_TOKEN secret is empty"; exit 1; fi
+
+          echo "::notice::Validation: all secrets is valid"
+
+      - name: "Validation: variables"
+        run: |
+          echo "Checking variables..."
+          if [ -z '${{ vars.AUTOMATION_ORG }}' ]; then echo "::error::AUTOMATION_ORG variable is empty"; exit 1; fi
+          if [ -z '${{ vars.AUTOMATION_REPO }}' ]; then echo "::error::AUTOMATION_REPO variable is empty"; exit 1; fi
+
+          echo "::notice::Validation: all secrets is valid"
+
+      - name: "Job checkout"
+        uses: actions/checkout@v6
+        with:
+          token: ${{ secrets.BOT_TOKEN }}
+          fetch-depth: 0
+
+      - name: "Validation: repositories and branches"
+        run: |
+          REPO_URL="https://x-access-token:${{ secrets.BOT_TOKEN }}@${{ env.AUTOMATION_REPO_URL }}"
+          
+          echo "Checking access to the repository..."
+          if git ls-remote --heads "$REPO_URL" > /dev/null; then
+            echo "::notice::Validation: access to the repository is confirmed"
+          else
+            echo "::error::Validation: repository not found or Bot's Token not accessible"
+            exit 1
+          fi
+          
+          echo "Checking if source branch exists in the repository..."
+          if git ls-remote --exit-code --heads "$REPO_URL" ${{ env.SOURCE_BRANCH }} > /dev/null; then
+            echo "::notice::Validation: source branch exists"
+          else
+            echo "::error::Validation: source branch '${{ env.SOURCE_BRANCH }}' NOT found at the repository"
+            exit 1
+          fi
+          
+          echo "Checking if fetch can be executed for source repository..."
+          if ! git fetch "$REPO_URL" ${{ env.SOURCE_BRANCH }} --quiet; then
+            echo "::error::Validation: failed to fetch branch '${{ env.SOURCE_BRANCH }}' from the repository. Check permissions"
+            exit 1
+          else
+            echo "::notice::Validation: successfully done fetch from source repository"
+          fi
+          
+          echo "Checking for the presence of the target branch..."
+          if git ls-remote --exit-code --heads origin ${{ github.event.inputs.branch }} > /dev/null; then
+            echo "::error::Validation: branch '${{ github.event.inputs.branch }}' already exists in this repository"
+            exit 1
+          else
+            echo "::notice::Validation: the branch is free"
+          fi
+
+      - name: "Configuration Bot from secrets"
+        run: |
+          git config --global user.name '${{ secrets.BOT_NAME }}'
+          git config --global user.email '${{ secrets.BOT_EMAIL }}'
+
+      - name: "Create local branch: ${{ github.event.inputs.branch }}"
+        run: |
+          git checkout -b '${{ github.event.inputs.branch }}'
+
+      - name: "Force override subtree"
+        if: ${{ github.event.inputs.force-override == 'true' }}
+        env:
+          TARGET_FOLDER: ".github"
+        run: |
+          echo "::notice::Preparing staging area for subtree re-initialization..."
+          
+          if [ -d "$TARGET_FOLDER" ]; then
+            git rm -rf --ignore-unmatch $TARGET_FOLDER
+            rm -rf $TARGET_FOLDER
+            git commit -m "chore: force remove $TARGET_FOLDER before subtree override"
+            echo "::notice::Folder '$TARGET_FOLDER' has been removed from index and workspace"
+          else
+            echo "::notice::Folder '$TARGET_FOLDER' not found, skipping removal"
+          fi
+    
+      - name: "Subtree integration"
+        env:
+          TARGET_FOLDER: ".github"
+        run: |
+          set -e
+          
+          PREVIOUS_SHA=$(git rev-parse HEAD)
+          REPO_URL="https://x-access-token:${{ secrets.SOURCE_MATERIALS_TOKEN }}@${{ env.AUTOMATION_REPO_URL }}"
+          
+          if [ -d '${{ env.TARGET_FOLDER }}' ]; then
+            echo "::notice::Folder '${{ env.TARGET_FOLDER }}' exists. Performing Pull..."
+            git subtree pull "$REPO_URL" '${{ env.SOURCE_BRANCH }}'\
+                --prefix='${{ env.TARGET_FOLDER }}'\
+                --squash\
+                --message='${{ github.event.inputs.commit-message }}' || {
+              echo "::error::Subtree pulling failed. Try use `force-override` mode"
+              exit 1
+            }
+          else
+            echo "::notice::Folder '${{ env.TARGET_FOLDER }}' does not exist. Performing Add..."
+            git subtree add "$REPO_URL" '${{ env.SOURCE_BRANCH }}'\
+                --prefix='${{ env.TARGET_FOLDER }}'\
+                --squash\
+                --message='${{ github.event.inputs.commit-message }}' || {
+              echo "::error::Subtree adding failed"
+              exit 1
+            }
+          fi
+          
+          CURRENT_SHA=$(git rev-parse HEAD)
+          if [ "$PREVIOUS_SHA" = "$CURRENT_SHA" ]; then
+            echo "::warning::No new commits created by subtree. Repository is already up to date"
+            exit 1
+          else
+            echo "::notice::Subtree integration completed successfully"
+          fi
+
+      - name: "Push changes"
+        run: |
+          git push -u origin '${{ github.event.inputs.branch }}'
+
+      - name: "Creating Pull Request"
+        env:
+          GH_TOKEN: ${{ secrets.BOT_TOKEN }}
+          PR_TEMPLATE_PATH: ".github/pull_request_template.md"
+        run: |
+          if [ -f '${{ env.PR_TEMPLATE_PATH }}' ]; then
+            echo "::notice::Using Pull Request Template from '${{ env.PR_TEMPLATE_PATH }}'"
+            BODY_FILE='${{ env.PR_TEMPLATE_PATH }}'
+          else
+            echo "::notice::No Pull Request Template found, creating temporary body"
+            echo "${{ github.event.inputs.commit-message }}" > temporary_body.md
+            BODY_FILE="temporary_body.md"
+          fi
+          
+          PR_URL=$(gh pr create \
+            --title '${{ github.event.inputs.branch }}' \
+            --assignee '${{ github.actor }}' \
+            --body-file "$BODY_FILE" \
+            --base '${{ github.ref_name }}' \
+            --head '${{ github.event.inputs.branch }}' \
+            --draft)
+
+          echo "PR_URL=$PR_URL" >> $GITHUB_ENV
+          echo "::notice::Pull Request created successfully"
+
+      - name: "Summary: display update info"
+        run: |
+          echo "::notice::Successfully updated"
+          
+          echo "### Update Process Completed" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch:** ${{ github.event.inputs.branch }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit Message:** ${{ github.event.inputs.commit-message }}" >> $GITHUB_STEP_SUMMARY
+          echo "#### [Click here to finillize Pull Request]($PR_URL)" >> $GITHUB_STEP_SUMMARY

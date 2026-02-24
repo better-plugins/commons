@@ -1,0 +1,42 @@
+name: Task
+description: Do you have a task with a clear vision for implementation? Describe it here.
+projects: []
+body:
+  - type: textarea
+    id: description-textarea
+    attributes:
+      label: Description
+      description: Causes of the task, context, history or general information
+      placeholder: "Example: The game currently lacks an active evasion mechanic, which inspired by Sausage-like combat systems. A Dodge action should allow the character to evade incoming attacks through timed movement combined with temporary invulnerability."
+  - type: textarea
+    id: in-textarea
+    attributes:
+      label: In Scope
+      description: What is included in the task
+      placeholder: "Example:\n- Add a Dodge action that can be triggered by brain input\n- Add invulnerability frames during a specific window of the dodge animation\n- Consume stamina on dodge activation and prevent dodge when stamina is insufficient\n- Lock character actions during dodge animation except for allowed transitions"
+    validations:
+      required: true
+  - type: textarea
+    id: out-textarea
+    attributes:
+      label: Out of Scope
+      description: What is not included in the task
+      placeholder: "Example:\n- Perfect dodge bonuses such as slow motion or counterattacks\n- Animation polish or VFX beyond basic placeholders"
+  - type: textarea
+    id: requirements-textarea
+    attributes:
+      label: Additional Requirements
+      description: Additional requirements that must be met
+      placeholder: "Example:\n- Dodge must feel responsive with minimal responce latency\n- Configuration values must be data-driven and editable without code changes"
+  - type: textarea
+    id: risks-textarea
+    attributes:
+      label: Risks
+      description: Describe possible risks or difficult moments
+      placeholder: "Example: Tight coupling with animation timing could introduce bugs if animations change."
+  - type: textarea
+    id: references-textarea
+    attributes:
+      label: References
+      description: Links to examples, similar implementations, or documentation
+      placeholder: "Example: Dark Sausage F - player dodge mechanics analysis video."

@@ -1,0 +1,9 @@
+changelog:
+  categories:
+    - title: "What's Changed"
+      labels:
+        - "*"
+  exclude:
+    labels: []
+    authors:
+      - "github-actions[bot]"

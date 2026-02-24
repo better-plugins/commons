@@ -1,0 +1,65 @@
+name: Improvement Request
+description: Do you have an idea how to make something better?
+projects: []
+type: Feature
+body:
+  - type: textarea
+    id: statement-textarea
+    attributes:
+      label: Problem Statement
+      description: Describe problem or limitation that trying to solve? What currently
+        works poorly or needs improvement?
+      placeholder: "Example: Currently, characters can only block or attack. There is no quick evasion mechanic, which makes combat feel rigid and limits players’ ability to react to fast attacks or environmental hazards. Players often get hit by unavoidable attacks, reducing the skill-based depth of gameplay.
+This limits combat variety and makes certain encounters frustrating."
+    validations:
+      required: true
+  - type: textarea
+    id: workflow-textarea
+    attributes:
+      label: Current Workflow
+      description: Describe how you are solving this problem now.
+      placeholder: "Example: Players rely on blocking or positioning to avoid attacks. Timing-based challenges are mostly about staying out of range rather than actively dodging attacks."
+    validations:
+      required: false
+  - type: textarea
+    id: improvement-textarea
+    attributes:
+      label: Proposed Improvement
+      description: Describe the desired improvement or new feature. How you envision
+        its behavior from the user's perspective.
+      placeholder: "Example: Introduce a dodge mechanic that allows characters to quickly evade attacks by rolling or dashing in a chosen direction. Key behaviors:\n- All characters gain a dodge action mapped to a dedicated button/key.\n- Dodging consumes a small stamina/resource meter to prevent spamming.\n- Invincibility frames are applied during the dodge animation to allow players to avoid attacks.\n- Directional dodge (forward, backward, left, right) is possible to improve tactical movement.\n- Animations and sound effects are added for clear visual and audio feedback."
+    validations:
+      required: true
+  - type: textarea
+    id: intent-textarea
+    attributes:
+      label: User Intent
+      description: Describe why you are trying to solve this problem?
+      placeholder: "Example: To increase player agency and combat satisfaction. The goal is to make fights feel more dynamic and skill-based, allowing players to actively evade attacks rather than passively wait or block."
+    validations:
+      required: false
+  - type: textarea
+    id: alternatives-textarea
+    attributes:
+      label: Alternatives Considered
+      description: What alternative solutions or approaches have you considered? Why
+        are they not suitable?
+      placeholder: "Example:\n- Adding only a sprint or dash mechanic: insufficient because it doesn’t provide temporary invincibility.\n- Increasing block effectiveness: does not encourage active engagement and reduces skill differentiation.\nThe proposed dodge mechanic is the most balanced and player-driven solution."
+  - type: textarea
+    id: risks-textarea
+    attributes:
+      label: Risks and Constraints
+      description: Describe any possible risks, limitations, or technical difficulties
+      placeholder: "Example: Balancing dodge timing and invincibility frames is crucial to avoid making the game too easy. Requires adjustments to enemy attack patterns and animation timing. May introduce bugs with collision detection or overlapping animations if not implemented carefully."
+  - type: textarea
+    id: references-textarea
+    attributes:
+      label: References
+      description: Provide any additional materials
+      placeholder: "Example:\n- Dark Sausage Dodge Mechanics Analysis\n- Hates Game Design Interview - Player Mobility"
+  - type: textarea
+    id: notes-textarea
+    attributes:
+      label: Additional Notes
+      description: Provide any additional descriptions or comments
+      placeholder: "Example:\n- Consider adding visual cues like motion blur or afterimages to emphasize dodge speed.\n- Stamina/resource cost can scale with player level or difficulty setting.\n- Could be combined with advanced combat combos for high-level players."

@@ -1,0 +1,67 @@
+# Engine Environment
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Ll]ogs/
+[Uu]ser[Ss]ettings/
+[Mm]emoryCaptures/
+/[Aa]ssets/AssetStoreTools*
+/[Aa]ssets/Plugins/BurstCache/
+BurstCache/
+
+# Artifacts and Meta
+*.log
+*.pidb.meta
+*.pdb.meta
+*.mdb.meta
+sysinfo.txt
+mono_crash.*
+
+# Addressables
+[Aa]ssets/StreamingAssets/aa/*
+[Aa]ssets/AddressableAssetsData/*/*.bin*
+[Aa]ssets/AddressableAssetsData/link.xml
+[Aa]ssets/Addressables_Temp/
+ServerData/
+
+# Visual Scripting
+[Aa]ssets/Unity.VisualScripting.Generated/
+
+# IDE and Project Files
+.vs/
+*.csproj
+*.sln
+*.suo
+*.user
+*.userprefs
+*.unityproj
+*.booproj
+*.svd
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
+.idea/
+*.DotSettings.user
+[Aa]ssets/Plugins/Editor/JetBrains*
+.vscode/
+
+# OS Specific
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# External Tools
+.gradle/
+crashlytics-build.properties
+*.blend1
+*.blend1.meta
+ExportedObj/
+
+# Builds
+[Bb]uild/
+[Bb]uilds/
+*.unitypackage
+*.apk
+*.aab
+*.exe

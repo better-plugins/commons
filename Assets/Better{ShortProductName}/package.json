@@ -1,0 +1,30 @@
+{
+  "name": "com.better.{shortproductname}",
+  "displayName": "Better {Short Product Name}",
+  "author": {
+    "name": "Better Plugins",
+    "url": "https://github.com/better-plugins"
+  },
+  "license": "MIT",
+  "licensesUrl": "https://github.com/better-plugins/better-{short-product-name}/blob/main/LICENSE",
+  "description": "{Description}",
+  "keywords": [
+    "keyword1",
+    "keyword2",
+    "keyword3"
+  ],
+  "unity": "6000",
+  "version": "<release-placeholder>",
+  "documentationUrl": "https://github.com/better-plugins/better-{short-product-name}/blob/main/README.md",
+  "changelogUrl": "<release-placeholder>",
+  "dependencies": {
+    "com.example.dependency": "1.0.0"
+  },
+  "samples": [
+    {
+      "displayName": "Default samples",
+      "description": "Contains some samples",
+      "path": "Samples~/Samples"
+    }
+  ]
+}
