@@ -1,6 +1,6 @@
-# Better {Short Product Name}
+# Better Commons
 
-[![openupm](https://img.shields.io/npm/v/com.better.{shortproductname}?label=openupm&registry_uri=https://package.openupm.com)](https://openupm.com/packages/com.better.{shortproductname}/)
+[![openupm](https://img.shields.io/npm/v/com.betterplugins.commons?label=openupm&registry_uri=https://package.openupm.com)](https://openupm.com/packages/com.betterplugins.commons/)
 
 ## Install
 
@@ -14,9 +14,7 @@ To install any plugin from Better plugin Collection you need to:
 |--------|------------------------------|
 | name   | `Better Plugins`             |
 | url    | `https://package.openupm.com`|
-| scopes | `com.better`                 |
-
-<img width="869" height="312" alt="image" src="https://github.com/user-attachments/assets/ef5c7951-7814-4b0f-a4ef-1505b44999e3" />
+| scopes | `com.betterplugins`          |
 
 5. Select **Window** in Toolbar;
 6. Open **Package Manager**;
