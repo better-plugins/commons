@@ -1,30 +1,25 @@
 {
-  "name": "com.better.{shortproductname}",
-  "displayName": "Better {Short Product Name}",
+  "name": "com.betterplugins.commons",
+  "displayName": "Better Commons",
   "author": {
     "name": "Better Plugins",
     "url": "https://github.com/better-plugins"
   },
   "license": "MIT",
-  "licensesUrl": "https://github.com/better-plugins/better-{short-product-name}/blob/main/LICENSE",
-  "description": "{Description}",
+  "licensesUrl": "https://github.com/better-plugins/commons/blob/main/LICENSE",
+  "description": "A universal set of helpers for general-purpose Unity development",
   "keywords": [
-    "keyword1",
-    "keyword2",
-    "keyword3"
+    "commons",
+    "components",
+    "tools",
+    "utilities",
+    "extensions"
   ],
   "unity": "6000",
   "version": "<release-placeholder>",
-  "documentationUrl": "https://github.com/better-plugins/better-{short-product-name}/blob/main/README.md",
+  "documentationUrl": "https://github.com/better-plugins/commons/blob/main/README.md",
   "changelogUrl": "<release-placeholder>",
   "dependencies": {
-    "com.example.dependency": "1.0.0"
-  },
-  "samples": [
-    {
-      "displayName": "Default samples",
-      "description": "Contains some samples",
-      "path": "Samples~/Samples"
-    }
-  ]
+    "com.betterplugins.core": "0.1.0"
+  }
 }
