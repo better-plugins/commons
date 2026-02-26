@@ -1,10 +1,8 @@
 {
-    "name": "Better.{ShortProductName}.Editor",
-    "rootNamespace": "Better.{ShortProductName}.EditorAddons",
+    "name": "Better.Commons.Runtime",
+    "rootNamespace": "Better.Commons.Runtime",
     "references": [],
-    "includePlatforms": [
-        "Editor"
-    ],
+    "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,
