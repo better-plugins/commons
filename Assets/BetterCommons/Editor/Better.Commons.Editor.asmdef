@@ -1,7 +1,9 @@
 {
     "name": "Better.Commons.Editor",
     "rootNamespace": "Better.Commons.EditorAddons",
-    "references": [],
+    "references": [
+        "GUID:76d16f1bb27af6d4092d2fe386eacb90"
+    ],
     "includePlatforms": [
         "Editor"
     ],
