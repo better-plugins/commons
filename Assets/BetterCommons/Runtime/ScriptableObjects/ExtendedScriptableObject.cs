@@ -1,4 +1,5 @@
 using System.Text;
+using Better.Commons.Runtime.Extensions;
 using Better.Commons.Runtime.Interfaces;
 using UnityEngine;
 
@@ -28,8 +29,7 @@ namespace Better.Commons.Runtime.ScriptableObjects
 
 		public virtual void CollectDebugInfo(int depth, ref StringBuilder builder)
 		{
-			// TODO: will be updated with #14
-			// builder.AppendTypeLine(this);
+			builder.AppendTypeLine(this);
 		}
 	}
 }

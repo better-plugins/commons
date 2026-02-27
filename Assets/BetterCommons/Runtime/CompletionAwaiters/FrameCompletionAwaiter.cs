@@ -1,4 +1,5 @@
 ﻿using System.Threading;
+using Better.Commons.Runtime.Extensions;
 using ThreadingTask = System.Threading.Tasks.Task;
 
 namespace Better.Commons.Runtime.CompletionAwaiters
@@ -7,9 +8,8 @@ namespace Better.Commons.Runtime.CompletionAwaiters
 	{
 		protected FrameCompletionAwaiter(CancellationToken cancellationToken) : base(cancellationToken)
 		{
-			// TODO: will be updated with #14
-			// ProcessKeepingAsync(cancellationToken)
-			//	 .Forget();
+			ProcessKeepingAsync(cancellationToken)
+				.Forget();
 		}
 
 		private async ThreadingTask ProcessKeepingAsync(CancellationToken cancellationToken)
