@@ -1,4 +1,6 @@
-﻿using Better.Commons.Runtime.Comparers;
+﻿using Better.Commons.EditorAddons.Extensions;
+using Better.Commons.Runtime.Comparers;
+using Better.Commons.Runtime.Extensions;
 using UnityEditor;
 
 namespace Better.Commons.EditorAddons.Comparers
@@ -7,8 +9,6 @@ namespace Better.Commons.EditorAddons.Comparers
 	{
 		protected override bool EqualsValue(SerializedProperty x, SerializedProperty y)
 		{
-			// TODO: will be updated with #14
-			/*
 			if (x.IsDisposed())
 			{
 				return false;
@@ -26,15 +26,12 @@ namespace Better.Commons.EditorAddons.Comparers
 
 			var pathEquals = x.IsPathEquals(y);
 			return pathEquals;
-			*/
 
 			return false;
 		}
 
 		public override int GetHashCode(SerializedProperty obj)
 		{
-			// TODO: will be updated with #14
-			/*
 			if (!obj.Verify())
 			{
 				return 0;
@@ -49,7 +46,6 @@ namespace Better.Commons.EditorAddons.Comparers
 			{
 				return 0;
 			}
-			*/
 
 			var pathHashCode = obj.propertyPath.GetHashCode();
 			return pathHashCode;

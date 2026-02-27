@@ -1,4 +1,7 @@
+using System;
 using System.Threading;
+using Better.Commons.Runtime.Extensions;
+using Better.Commons.Runtime.Utilities;
 using UnityEngine;
 
 namespace Better.Commons.Runtime.CompletionAwaiters
@@ -10,8 +13,6 @@ namespace Better.Commons.Runtime.CompletionAwaiters
 
 		public ProgressAsyncOperationAwaiter(CancellationToken cancellationToken, AsyncOperation operation, float progressThreshold) : base(cancellationToken, operation)
 		{
-			// TODO: will be updated with #14
-			/*
 			if (!progressThreshold.IsNormalized())
 			{
 				var progressRangeMessage = $"{nameof(progressThreshold)}({progressThreshold}) not normalized, will be forcibly normalized";
@@ -19,7 +20,6 @@ namespace Better.Commons.Runtime.CompletionAwaiters
 
 				progressThreshold = Mathf.Clamp01(progressThreshold);
 			}
-			*/
 
 			ProgressThreshold = progressThreshold;
 		}

@@ -1,5 +1,6 @@
 using System.Text;
 using System.Threading;
+using Better.Commons.Runtime.Extensions;
 using Better.Commons.Runtime.Interfaces;
 using Better.Commons.Runtime.Utilities;
 using UnityEngine;
@@ -178,12 +179,11 @@ namespace Better.Commons.Runtime.Components
 
 		public virtual void CollectDebugInfo(int depth, ref StringBuilder builder)
 		{
-			// TODO: will be updated with #14
-			// builder.AppendTypeLine(this)
-			// .AppendFieldLine(nameof(name), name)
-			// .AppendFieldLine(nameof(Alive), Alive)
-			// .AppendFieldLine(nameof(enabled), enabled)
-			// .AppendFieldLine(nameof(isActiveAndEnabled), isActiveAndEnabled);
+			builder.AppendTypeLine(this)
+				.AppendFieldLine(nameof(name), name)
+				.AppendFieldLine(nameof(Alive), Alive)
+				.AppendFieldLine(nameof(enabled), enabled)
+				.AppendFieldLine(nameof(isActiveAndEnabled), isActiveAndEnabled);
 		}
 
 		protected virtual void Reset()

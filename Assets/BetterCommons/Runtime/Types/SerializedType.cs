@@ -1,4 +1,6 @@
 ﻿using System;
+using Better.Commons.Runtime.Extensions;
+using Better.Commons.Runtime.Utilities;
 using UnityEngine;
 
 namespace Better.Commons.Runtime.Types
@@ -43,17 +45,14 @@ namespace Better.Commons.Runtime.Types
 
 		void ISerializationCallbackReceiver.OnAfterDeserialize()
 		{
-			// TODO: will be updated with #14
-			// TypeUtility.TryGetType(_fullQualifiedName, out _type);
+			TypeUtility.TryGetType(_fullQualifiedName, out _type);
 			Validate();
 		}
 
 		private protected bool Validate(bool logWarnings = true)
 		{
-			// TODO: will be updated with #14
-			// var isValid = _type != null || TypeUtility.TryGetType(_fullQualifiedName, out _type);
-			var isValid = true;
-			
+			var isValid = _type != null || TypeUtility.TryGetType(_fullQualifiedName, out _type);
+
 			if (!isValid && logWarnings)
 			{
 				var message = $"Type cannot be found by {nameof(_fullQualifiedName)}({_fullQualifiedName})";
@@ -91,11 +90,10 @@ namespace Better.Commons.Runtime.Types
 				return true;
 			}
 
-			// TODO: will be updated with #14
-			// if (obj.CompareTypes(this))
-			// {
-				// return false;
-			// }
+			if (obj.CompareTypes(this))
+			{
+				return false;
+			}
 
 			var equal = Equals((SerializedType)obj);
 			return equal;

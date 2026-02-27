@@ -1,6 +1,8 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using Better.Commons.Runtime.Utilities;
 
 namespace Better.Commons.Runtime.Enumerators
 {
@@ -20,9 +22,8 @@ namespace Better.Commons.Runtime.Enumerators
 		{
 			if (skipFrames < 0)
 			{
-				// TODO: will be updated with #14
-				// var skipRangeMessage = $"{nameof(skipFrames)}({skipFrames}) cannot be less than zero, will be clamped to {nameof(DefaultSkipFrames)}({DefaultSkipFrames})";
-				// DebugUtility.LogException<ArgumentOutOfRangeException>(skipRangeMessage);
+				var skipRangeMessage = $"{nameof(skipFrames)}({skipFrames}) cannot be less than zero, will be clamped to {nameof(DefaultSkipFrames)}({DefaultSkipFrames})";
+				DebugUtility.LogException<ArgumentOutOfRangeException>(skipRangeMessage);
 				skipFrames = DefaultSkipFrames;
 			}
 
