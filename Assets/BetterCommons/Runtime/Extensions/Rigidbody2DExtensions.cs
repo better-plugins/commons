@@ -1,4 +1,6 @@
-﻿using System;
+﻿#if UNITY_PHYSICS_2D
+
+using System;
 using System.Linq;
 using Better.Commons.Runtime.Utilities;
 using UnityEngine;
@@ -29,3 +31,5 @@ namespace Better.Commons.Runtime.Extensions
 		}
 	}
 }
+
+#endif
