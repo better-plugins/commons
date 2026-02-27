@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Better.Commons.EditorAddons.Extensions;
+using Better.Commons.Runtime.Utilities;
 using UnityEditor;
 
 namespace Better.Commons.EditorAddons.Metadata
@@ -26,20 +28,16 @@ namespace Better.Commons.EditorAddons.Metadata
 			{
 				return;
 			}
-			
-			// TODO: will be updated with #14
-			// if (!_serializedObject.ValidateTargets())
-			// {
-				// return;
-			// }
+
+			if (!_serializedObject.ValidateTargets())
+			{
+				return;
+			}
 
 			foreach (var target in _serializedObject.targetObjects)
 			{
 				var targetType = target.GetType();
-				var allMembers = Array.Empty<MemberInfo>();
-				
-				// TODO: will be updated with #14
-				// var allMembers = targetType.GetMembers(BindingFlagsUtility.MethodFlags);
+				var allMembers = targetType.GetMembers(BindingFlagsUtility.MethodFlags);
 
 				if (_memberInfosMap.TryGetValue(targetType, out var members))
 				{
@@ -54,12 +52,10 @@ namespace Better.Commons.EditorAddons.Metadata
 				}
 			}
 
-			// TODO: will be updated with #14
-			// if (!ReflectionUtility.TryGetCommonBaseType(_serializedObject.targetObjects, out var commonBaseType))
-			// {
-				// return;
-			// }
-			Type commonBaseType = null;
+			if (!ReflectionUtility.TryGetCommonBaseType(_serializedObject.targetObjects, out var commonBaseType))
+			{
+				return;
+			}
 
 			TargetType = commonBaseType;
 			IsValid = true;
@@ -76,9 +72,7 @@ namespace Better.Commons.EditorAddons.Metadata
 				attributes = null;
 				return false;
 			}
-			
-			// TODO: will be updated with #14
-			/*
+
 			if (!_serializedObject.ValidateTargets())
 			{
 				attributes = null;
@@ -92,7 +86,6 @@ namespace Better.Commons.EditorAddons.Metadata
 
 				return true;
 			}
-			*/
 
 			attributes = null;
 			return false;
@@ -106,12 +99,11 @@ namespace Better.Commons.EditorAddons.Metadata
 				return false;
 			}
 
-			// TODO: will be updated with #14
-			// if (!_serializedObject.ValidateTargets())
-			// {
-				// properties = null;
-				// return false;
-			// }
+			if (!_serializedObject.ValidateTargets())
+			{
+				properties = null;
+				return false;
+			}
 
 			var serializedProperties = new List<SerializedProperty>();
 			var iterator = _serializedObject.GetIterator();
@@ -138,12 +130,11 @@ namespace Better.Commons.EditorAddons.Metadata
 				return false;
 			}
 
-			// TODO: will be updated with #14
-			// if (!_serializedObject.ValidateTargets())
-			// {
-				// memberInfos = null;
-				// return false;
-			// }
+			if (!_serializedObject.ValidateTargets())
+			{
+				memberInfos = null;
+				return false;
+			}
 
 			var bufferMembers = Enumerable.Empty<TMember>();
 
@@ -172,10 +163,9 @@ namespace Better.Commons.EditorAddons.Metadata
 
 			if (!isValid && logException)
 			{
-				// TODO: will be updated with #14
-				// var reason = targetState ? "must be valid" : "must be invalid";
-				// var message = "Improper state, " + reason;
-				// DebugUtility.LogException<InvalidOperationException>(message);
+				var reason = targetState ? "must be valid" : "must be invalid";
+				var message = "Improper state, " + reason;
+				DebugUtility.LogException<InvalidOperationException>(message);
 			}
 
 			return isValid;

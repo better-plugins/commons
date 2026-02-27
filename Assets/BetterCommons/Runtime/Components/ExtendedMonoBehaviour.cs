@@ -1,6 +1,7 @@
 using System.Text;
 using System.Threading;
 using Better.Commons.Runtime.Interfaces;
+using Better.Commons.Runtime.Utilities;
 using UnityEngine;
 
 namespace Better.Commons.Runtime.Components
@@ -154,8 +155,7 @@ namespace Better.Commons.Runtime.Components
 				return;
 			}
 
-			// TODO: will be updated with #14
-			// _aliveTokenSource = CancellationTokenSourceUtility.CancelledSource;
+			_aliveTokenSource = CancellationTokenSourceUtility.CancelledSource;
 		}
 
 		protected virtual void OnDestroy()
